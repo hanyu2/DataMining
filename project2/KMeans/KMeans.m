@@ -7,27 +7,29 @@ close all
 seeds = load('seeds.txt');
 
 % k-means parameter setup
-K = 3;
-
-iterations = 0;
+K = 7;
+times = 10;
 totalsse = 0;
-for i=1:10
+max_iterations = 100;
+
+for i = 1:times
     centroids = initCentroids(seeds, K);
     sse = 0;
-    while iterations < 100
-      indices = getClosestCentroids(seeds, centroids);
-      centroids = computeCentroids(seeds, indices, K);
-      newsse = computeSSE(seeds, centroids, indices);
-      diff = newsse - sse;
-      if (abs(diff) < 0.001)
+    iterations = 0;
+    while iterations < max_iterations
+        indices = getClosestCentroids(seeds, centroids);
+        centroids = computeCentroids(seeds, indices, K);
+        newsse = computeSSE(seeds, centroids, indices);
+        diff = newsse - sse;
+        if (abs(diff) < 0.001)
           break;
-      end;
-      sse = newsse;
-      iterations = iterations + 1;
+        end
+        sse = newsse;
+        iterations = iterations + 1;
     end
     totalsse = totalsse + sse;
 end
-fprintf('If, k = %d, average SSE in K-menas method is %d. Iteration is %d\n', K, totalsse / 10, iterations);
+fprintf('If k = %d, average SSE in K-menas method is %d \n', K, totalsse / times);
 
 % function: randomly initialize K centroids
 function centroids = initCentroids(seeds, K)
@@ -59,17 +61,21 @@ function indices = getClosestCentroids(seeds, centroids)
   end
 end
 
+%Compute the new centroid based on the new map between each seed and it own
+% number of the cluster
 function centroids = computeCentroids(seeds, idx, K)
   n = size(seeds, 2);
   centroids = zeros(K, n);
-
   for i=1:K
+    %Construct the temporary matrix orgranzed by its number of the cluster
     xi = seeds(idx==i,:);
     ck = size(xi,1);
+    %Finish the calculation of the new cntroid
     centroids(i, :) = (1/ck) * sum(xi);
   end
 end
 
+%Computer the current SSE based on the new cluster set
 function sse = computeSSE(seeds, centroids, indices)
   sse = 0;
   m = size(seeds, 1);
